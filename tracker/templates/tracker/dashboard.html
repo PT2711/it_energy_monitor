@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Department Energy & Infrastructure Monitor</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 24px; background: #f8fafc; color: #0f172a; }
+        header { background: #0f172a; color: white; padding: 18px 24px; border-radius: 8px; margin-bottom: 20px; }
+        header h1 { margin: 0; font-size: 20px; }
+        header p { margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; }
+        .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        label { font-weight: 600; font-size: 13px; display: block; margin-top: 10px; }
+        input, select, button { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        button { background: #2563eb; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 14px; }
+        button:hover { background: #1d4ed8; }
+        .kpi-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .kpi-box { flex: 1; background: #f1f5f9; border-radius: 6px; padding: 8px; text-align: center; }
+        .kpi-box h4 { margin: 0; font-size: 11px; color: #64748b; }
+        .kpi-box span { font-size: 16px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+        th { background: #f8fafc; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>IT Department: Lab & Server Energy Monitor</h1>
+        <p>Telemetry Analytics using Django, NumPy, Pandas & Matplotlib</p>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Log Department Power Reading</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <label for="lab_name">Lab / Unit</label>
+                <select name="lab_name" id="lab_name" required>
+                    <option value="Server Room">Central Server Room</option>
+                    <option value="AI & DS Lab">AI & Data Science Lab</option>
+                    <option value="Network Lab">Networking & Security Lab</option>
+                    <option value="Software Lab">Software Engineering Lab</option>
+                    <option value="Cloud Lab">Cloud Computing Lab</option>
+                </select>
+
+                <label for="device_type">Device / Infrastructure</label>
+                <input type="text" name="device_type" id="device_type" placeholder="e.g. Cisco Core Switch, Blade Server" required>
+
+                <label for="units_kwh">Power Consumed (kWh)</label>
+                <input type="number" step="0.1" name="units_kwh" id="units_kwh" placeholder="e.g. 42.5" required>
+
+                <button type="submit">Log Reading</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Department Analytics (NumPy & Matplotlib)</h3>
+            {% if numpy_metrics %}
+            <div class="kpi-row">
+                <div class="kpi-box">
+                    <h4>Mean Units</h4>
+                    <span>{{ numpy_metrics.mean_units }} kWh</span>
+                </div>
+                <div class="kpi-box">
+                    <h4>Peak Surge</h4>
+                    <span>{{ numpy_metrics.peak_units }} kWh</span>
+                </div>
+                <div class="kpi-box">
+                    <h4>Surges (>50 kWh)</h4>
+                    <span style="color: #dc2626;">{{ numpy_metrics.surges_above_50 }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if chart %}
+                <img src="data:image/png;base64,{{ chart }}" style="width: 100%; border-radius: 4px;">
+            {% else %}
+                <p style="color: #64748b;">No data logged yet. Add logs to view visualizations.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Logged Data (SQLite / Django ORM)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Lab Name</th>
+                    <th>Device</th>
+                    <th>Units (kWh)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in readings %}
+                <tr>
+                    <td>{{ log.logged_at|date:"d M Y, H:i" }}</td>
+                    <td><strong>{{ log.lab_name }}</strong></td>
+                    <td>{{ log.device_type }}</td>
+                    <td>{{ log.units_kwh }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align: center; color: #94a3b8;">No entries found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
